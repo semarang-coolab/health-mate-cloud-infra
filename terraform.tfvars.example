@@ -1,0 +1,2 @@
+gcp_service_account = "/service-account-path/key.json"
+gcp_project_id = "my-project-123456"
