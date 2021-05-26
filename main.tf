@@ -17,7 +17,7 @@ resource "google_storage_bucket" "health_mate" {
   }
 }
 
-resource "google_storage_bucket_access_control" "public_rule" {
+resource "google_storage_default_object_access_control" "public_rule" {
   bucket = google_storage_bucket.health_mate.name
   role   = "READER"
   entity = "allUsers"
