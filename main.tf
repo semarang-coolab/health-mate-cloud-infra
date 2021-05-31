@@ -111,9 +111,11 @@ module "jwt_key" {
 resource "google_vpc_access_connector" "private" {
   provider      = google-beta
   name          = "health-mate-api-conn"
-  ip_cidr_range = "10.123.0.0/28"
+  ip_cidr_range = "10.10.0.0/28"
   network       = google_compute_network.net_one.name
   machine_type  = "f1-micro"
+  min_instances = 2
+  max_instances = 3
 }
 
 resource "google_cloud_run_service" "healthmate-api" {
@@ -128,6 +130,11 @@ resource "google_cloud_run_service" "healthmate-api" {
   }
 
   template {
+    metadata {
+      annotations = {
+        "run.googleapis.com/vpc-access-connector" = google_vpc_access_connector.private.name
+      }
+    }
     spec {
       containers {
         image = "asia.gcr.io/${var.gcp_project_id}/health-mate-api"
