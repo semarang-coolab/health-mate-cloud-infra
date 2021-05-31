@@ -108,14 +108,6 @@ module "jwt_key" {
   project     = data.google_project.project.number
 }
 
-resource "google_vpc_access_connector" "private" {
-  provider      = google-beta
-  name          = "healthmate-dev-conn"
-  ip_cidr_range = "10.123.0.0/28"
-  network       = google_compute_network.net_one.name
-  machine_type  = "f1-micro"
-}
-
 resource "google_cloud_run_service" "healthmate-api" {
   provider = google-beta
   name     = "cloudrun-srv"
@@ -123,16 +115,12 @@ resource "google_cloud_run_service" "healthmate-api" {
 
   metadata {
     annotations = {
-      "run.googleapis.com/launch-stage" = "BETA"
+      "run.googleapis.com/launch-stage"       = "BETA"
+      "run.googleapis.com/cloudsql-instances" = google_sql_database_instance.private.connection_name
     }
   }
 
   template {
-    metadata {
-      annotations = {
-        "run.googleapis.com/vpc-access-connector" = google_vpc_access_connector.private.name
-      }
-    }
     spec {
       containers {
         image = "asia.gcr.io/${var.gcp_project_id}/health-mate-api"
