@@ -128,6 +128,10 @@ resource "google_cloud_run_service" "healthmate-api" {
           container_port = 8080
         }
         env {
+          name  = "INSTANCE_CONNECTION_NAME"
+          value = google_sql_database_instance.healthmate_db.connection_name
+        }
+        env {
           name  = "DB_HOST"
           value = google_sql_database_instance.healthmate_db.private_ip_address
         }
