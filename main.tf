@@ -77,3 +77,137 @@ resource "google_sql_user" "name" {
   instance        = google_sql_database_instance.healthmate_db.name
   deletion_policy = "ABANDON"
 }
+
+data "google_project" "project" {}
+
+module "db_user" {
+  source      = "./secrets"
+  secret_id   = "dbuser"
+  secret_data = var.sql_instance_user
+  project     = data.google_project.project.number
+}
+
+module "db_password" {
+  source      = "./secrets"
+  secret_id   = "dbpassword"
+  secret_data = var.sql_instance_password
+  project     = data.google_project.project.number
+}
+
+module "db_name" {
+  source      = "./secrets"
+  secret_id   = "dbname"
+  secret_data = var.db_name
+  project     = data.google_project.project.number
+}
+
+module "jwt_key" {
+  source      = "./secrets"
+  secret_id   = "jwtkey"
+  secret_data = var.jwt_key
+  project     = data.google_project.project.number
+}
+
+resource "google_vpc_access_connector" "private" {
+  name          = "mukti-test-dev-conn"
+  ip_cidr_range = "10.123.0.0/28"
+  network       = google_compute_network.net_one.name
+}
+
+resource "google_cloud_run_service" "healthmate-api" {
+  provider = google-beta
+  name     = "cloudrun-srv"
+  location = var.gcp_project_region
+
+  metadata {
+    annotations = {
+      "run.googleapis.com/launch-stage" = "BETA"
+    }
+  }
+
+  template {
+    metadata {
+      annotations = {
+        "run.googleapis.com/vpc-access-connector" = google_vpc_access_connector.private.name
+      }
+    }
+    spec {
+      containers {
+        image = "asia.gcr.io/${var.gcp_project_id}/health-mate-api"
+        ports {
+          container_port = 8080
+        }
+        env {
+          name  = "DB_HOST"
+          value = google_sql_database_instance.healthmate_db.private_ip_address
+        }
+        env {
+          name  = "DB_PORT"
+          value = "5432"
+        }
+        env {
+          name = "DB_USER"
+          value_from {
+            secret_key_ref {
+              name = module.db_user.secret_id
+              key  = "latest"
+            }
+          }
+        }
+        env {
+          name = "DB_PASSWORD"
+          value_from {
+            secret_key_ref {
+              name = module.db_password.secret_id
+              key  = "latest"
+            }
+          }
+        }
+        env {
+          name = "DB_NAME"
+          value_from {
+            secret_key_ref {
+              name = module.db_name.secret_id
+              key  = "latest"
+            }
+          }
+        }
+        env {
+          name  = "BUCKET_NAME"
+          value = google_storage_bucket.health_mate.name
+        }
+        env {
+          name = "JWT_KEY"
+          value_from {
+            secret_key_ref {
+              name = module.jwt_key.secret_id
+              key  = "latest"
+            }
+          }
+        }
+      }
+    }
+  }
+
+  traffic {
+    percent         = 100
+    latest_revision = true
+  }
+}
+
+data "google_iam_policy" "noauth" {
+  binding {
+    role = "roles/run.invoker"
+    members = [
+      "allUsers",
+    ]
+  }
+}
+
+resource "google_cloud_run_service_iam_policy" "noauth" {
+  location = google_cloud_run_service.healthmate-api.location
+  project  = google_cloud_run_service.healthmate-api.project
+  service  = google_cloud_run_service.healthmate-api.name
+
+  policy_data = data.google_iam_policy.noauth.policy_data
+}

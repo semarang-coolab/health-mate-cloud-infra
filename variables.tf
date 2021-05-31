@@ -10,3 +10,6 @@ variable "gcp_project_zone" {
 variable "sql_instance_authorized_network" {}
 variable "sql_instance_user" {}
 variable "sql_instance_password" {}
+
+variable "db_name" {}
+variable "jwt_key" {}
