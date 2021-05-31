@@ -110,7 +110,7 @@ module "jwt_key" {
 
 resource "google_cloud_run_service" "healthmate-api" {
   provider = google-beta
-  name     = "cloudrun-srv"
+  name     = "health-mate-api"
   location = var.gcp_project_region
 
   metadata {
