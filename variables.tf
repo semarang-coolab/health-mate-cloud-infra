@@ -6,3 +6,7 @@ variable "gcp_project_region" {
 variable "gcp_project_zone" {
   default = "asia-southeast2-a"
 }
+
+variable "sql_instance_authorized_network" {}
+variable "sql_instance_user" {}
+variable "sql_instance_password" {}
