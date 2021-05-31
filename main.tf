@@ -115,8 +115,7 @@ resource "google_cloud_run_service" "healthmate-api" {
 
   metadata {
     annotations = {
-      "run.googleapis.com/launch-stage"       = "BETA"
-      "run.googleapis.com/cloudsql-instances" = google_sql_database_instance.healthmate_db.connection_name
+      "run.googleapis.com/launch-stage" = "BETA"
     }
   }
 
