@@ -114,7 +114,6 @@ resource "google_vpc_access_connector" "private" {
   ip_cidr_range = "10.123.0.0/28"
   network       = google_compute_network.net_one.name
   machine_type  = "f1-micro"
-  min_instances = 1
 }
 
 resource "google_cloud_run_service" "healthmate-api" {
