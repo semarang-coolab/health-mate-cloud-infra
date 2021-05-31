@@ -22,3 +22,14 @@ resource "google_storage_default_object_access_control" "public_rule" {
   role   = "READER"
   entity = "allUsers"
 }
+
+resource "google_compute_network" "net_one" {
+  name                    = "semarang-coolab-healthmate-dev-vpc-1"
+  auto_create_subnetworks = false
+}
+
+resource "google_compute_subnetwork" "southeast2_subnetwork" {
+  name          = "semarang-coolab-healthmate-se-2-dev-subnet"
+  ip_cidr_range = "10.1.0.0/24"
+  network       = google_compute_network.net_one.id
+}
