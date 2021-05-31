@@ -109,9 +109,11 @@ module "jwt_key" {
 }
 
 resource "google_vpc_access_connector" "private" {
+  provider      = google-beta
   name          = "mukti-test-dev-conn"
   ip_cidr_range = "10.123.0.0/28"
   network       = google_compute_network.net_one.name
+  machine_type  = "f1-micro"
 }
 
 resource "google_cloud_run_service" "healthmate-api" {
