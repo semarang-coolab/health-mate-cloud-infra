@@ -108,16 +108,6 @@ module "jwt_key" {
   project     = data.google_project.project.number
 }
 
-resource "google_vpc_access_connector" "private" {
-  provider      = google-beta
-  name          = "health-mate-api-conn"
-  ip_cidr_range = "10.10.0.0/28"
-  network       = google_compute_network.net_one.name
-  machine_type  = "f1-micro"
-  min_instances = 2
-  max_instances = 3
-}
-
 resource "google_cloud_run_service" "healthmate-api" {
   provider = google-beta
   name     = "health-mate-api"
@@ -125,16 +115,12 @@ resource "google_cloud_run_service" "healthmate-api" {
 
   metadata {
     annotations = {
-      "run.googleapis.com/launch-stage" = "BETA"
+      "run.googleapis.com/launch-stage"       = "BETA"
+      "run.googleapis.com/cloudsql-instances" = google_sql_database_instance.healthmate_db.connection_name
     }
   }
 
   template {
-    metadata {
-      annotations = {
-        "run.googleapis.com/vpc-access-connector" = google_vpc_access_connector.private.name
-      }
-    }
     spec {
       containers {
         image = "asia.gcr.io/${var.gcp_project_id}/health-mate-api"
@@ -144,10 +130,6 @@ resource "google_cloud_run_service" "healthmate-api" {
         env {
           name  = "INSTANCE_CONNECTION_NAME"
           value = google_sql_database_instance.healthmate_db.connection_name
-        }
-        env {
-          name  = "DB_HOST"
-          value = google_sql_database_instance.healthmate_db.private_ip_address
         }
         env {
           name  = "DB_PORT"
