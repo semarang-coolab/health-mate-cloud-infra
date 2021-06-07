@@ -114,13 +114,12 @@ resource "google_cloud_run_service" "healthmate-machine-learning-api" {
   name                       = "health-mate-machine-learning-api"
   location                   = var.gcp_project_region
 
-  metadata {
-    annotations = {
-      "autoscaling.knative.dev/minScale" = 1
-    }
-  }
-
   template {
+    metadata {
+      annotations = {
+        "autoscaling.knative.dev/minScale" = "1"
+      }
+    }
     spec {
       containers {
         image = "asia.gcr.io/${var.gcp_project_id}/health-mate-machine-learning-grpc"
