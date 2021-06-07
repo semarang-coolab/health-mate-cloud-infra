@@ -121,6 +121,11 @@ resource "google_cloud_run_service" "healthmate-machine-learning-api" {
         ports {
           container_port = 8080
         }
+        resources {
+          limits = {
+            "memory" = "2Gi"
+          }
+        }
       }
     }
   }
