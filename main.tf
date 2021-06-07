@@ -108,10 +108,51 @@ module "jwt_key" {
   project     = data.google_project.project.number
 }
 
+resource "google_cloud_run_service" "healthmate-machine-learning-api" {
+  autogenerate_revision_name = true
+  provider                   = google-beta
+  name                       = "health-mate-machine-learning-api"
+  location                   = var.gcp_project_region
+
+  template {
+    spec {
+      containers {
+        image = "asia.gcr.io/${var.gcp_project_id}/health-mate-machine-learning-grpc"
+        ports {
+          container_port = 8080
+        }
+      }
+    }
+  }
+
+  traffic {
+    percent         = 100
+    latest_revision = true
+  }
+}
+
+data "google_iam_policy" "health-mate-ml-noauth" {
+  binding {
+    role = "roles/run.invoker"
+    members = [
+      "allUsers",
+    ]
+  }
+}
+
+resource "google_cloud_run_service_iam_policy" "health-mate-ml-noauth" {
+  location = google_cloud_run_service.healthmate-machine-learning-api.location
+  project  = google_cloud_run_service.healthmate-machine-learning-api.project
+  service  = google_cloud_run_service.healthmate-machine-learning-api.name
+
+  policy_data = data.google_iam_policy.health-mate-ml-noauth.policy_data
+}
+
 resource "google_cloud_run_service" "healthmate-api" {
-  provider = google-beta
-  name     = "health-mate-api"
-  location = var.gcp_project_region
+  autogenerate_revision_name = true
+  provider                   = google-beta
+  name                       = "health-mate-api"
+  location                   = var.gcp_project_region
 
   metadata {
     annotations = {
@@ -126,6 +167,10 @@ resource "google_cloud_run_service" "healthmate-api" {
         image = "asia.gcr.io/${var.gcp_project_id}/health-mate-api"
         ports {
           container_port = 8080
+        }
+        env {
+          name  = "PREDICTION_API_ADDRESS"
+          value = google_cloud_run_service.healthmate-machine-learning-api.status[0].url
         }
         env {
           name  = "INSTANCE_CONNECTION_NAME"
