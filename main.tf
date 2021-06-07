@@ -184,7 +184,7 @@ resource "google_cloud_run_service" "healthmate-api" {
         }
         env {
           name  = "PREDICTION_API_ADDRESS"
-          value = google_cloud_run_service.healthmate-machine-learning-api.status[0].url
+          value = format("%s:%d", replace(google_cloud_run_service.healthmate-machine-learning-api.status[0].url, "https://", ""), 443)
         }
         env {
           name  = "INSTANCE_CONNECTION_NAME"
