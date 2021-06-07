@@ -201,3 +201,9 @@ resource "google_cloud_run_service_iam_policy" "noauth" {
 
   policy_data = data.google_iam_policy.noauth.policy_data
 }
+
+resource "google_storage_bucket" "utils" {
+  name          = "semarang-coolab-health-mate-dev-utils"
+  location      = "ASIA-SOUTHEAST2"
+  force_destroy = true
+}
